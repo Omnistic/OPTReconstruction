@@ -75,7 +75,8 @@ while processing:
                                         tomo[:, 0, None, :],
                                         theta,
                                         options)
-
+        
+        center_cor = tentative_cor
         init_cor = False
     
     # Reconstruct tomogram
@@ -115,6 +116,7 @@ while processing:
     if ascending:
         if tomo_stop == height:
             ascending = False
+            tentative_cor = center_cor
             tomo_indx = tomo_init - 1
             tomo_stop = tomo_init
             tomo_start = tomo_stop - tomo_height
