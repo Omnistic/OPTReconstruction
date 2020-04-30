@@ -6,6 +6,7 @@ import opt_functions as opt
 # Initialization
 proj_folder = 'C:\\Users\\david\\Desktop\\opt_data\\'
 recon_folder = 'C:\\Users\\david\\Desktop\\reco\\'
+prefix = 'recon'
 
 proj_names = os.listdir(proj_folder)
 proj_path = proj_folder + proj_names[0]
@@ -95,7 +96,8 @@ while processing:
         
         # Save individual slices
         save_path = (recon_folder
-                     + 'recon_'            
+                     + prefix
+                     + '_'            
                      + '{:0>4d}'.format(tomo_indx)
                      + '.tif')
         tifffile.imsave(save_path, recon)
