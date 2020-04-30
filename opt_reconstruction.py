@@ -145,4 +145,4 @@ print(('Reconstruction complete (elapsed time: '
        + str(eta_m)
        + ' minutes, and '
        + str(eta_s)
-       + ' seconds'))
+       + ' seconds)'))
