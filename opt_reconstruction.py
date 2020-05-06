@@ -1,22 +1,25 @@
 import os
+import sys
 import tifffile
 import numpy as np
 import opt_functions as opt
+import matplotlib.pyplot as plt
+from pathlib import Path
 
 # Initialization
-proj_folder = 'C:\\Users\\david\\Desktop\\opt_data\\'
-recon_folder = 'C:\\Users\\david\\Desktop\\reco\\'
-prefix = 'recon'
+proj_folder = Path(r'D:\OPTReconstructionData\M3_523_17wNIF_ASMA_Projections')
+recon_folder = Path(r'C:\Users\david\Desktop\M3_523_17wNIF_ASMA_Reconstruction')
+prefix = 'recon_'
 
 proj_names = os.listdir(proj_folder)
-proj_path = proj_folder + proj_names[0]
-proj = tifffile.imread(proj_path)
+proj_path = proj_folder / proj_names[0]
+proj = tifffile.imread(str(proj_path))
 
 height, width = proj.shape
 angles = len(proj_names)
 theta = np.linspace(0, 2 * np.pi, angles)
 
-cor = []
+cor = np.zeros(height)
 tentative_cor = width // 2
 coarse_range = 15
 coarse_range = range(-coarse_range, coarse_range+1)
@@ -40,10 +43,16 @@ processing = True
 init_cor = True
 ascending = True
 height_exception = False
-test = []
 
 print('Reconstruction started ...')
 opt.tic()
+
+max_prog = 50
+global_indx = 0
+if height < max_prog:
+    progress_bar = False
+else:
+    progress_bar = True
 
 # Start tomogram processing
 while processing:
@@ -53,7 +62,7 @@ while processing:
     
     # Read tomogram
     tomo = np.zeros((angles, tomo_height, width))
-    opt.read_tomo(proj_folder,
+    opt.read_tomo(str(proj_folder),
                   proj_names,
                   angles,
                   tomo,
@@ -62,22 +71,27 @@ while processing:
     
     # Initialize the center of rotation
     if init_cor:
-        tentative_cor, _ = opt.scan_cor(coarse_range,
-                                        coarse_step,
-                                        tentative_cor,
-                                        tomo[:, 0, None, :],
-                                        theta,
-                                        options)
+        tentative_cor = opt.coarse_scan_cor(coarse_range,
+                                            coarse_step,
+                                            tentative_cor,
+                                            tomo[:, 0, None, :],
+                                            theta,
+                                            options)
                 
-        tentative_cor, _ = opt.scan_cor(init_fine_range,
-                                        fine_step,
-                                        tentative_cor,
-                                        tomo[:, 0, None, :],
-                                        theta,
-                                        options)
+        tentative_cor, _ = opt.fine_scan_cor(init_fine_range,
+                                             fine_step,
+                                             tentative_cor,
+                                             tomo[:, 0, None, :],
+                                             theta,
+                                             options)
         
         center_cor = tentative_cor
         init_cor = False
+        
+        if progress_bar:
+            print('|' +    max_prog*'-'    + '|     Reconstruction progress')
+            sys.stdout.write('|'); sys.stdout.flush();
+            part_prog = 0
     
     # Reconstruct tomogram
     if ascending:
@@ -86,22 +100,30 @@ while processing:
         slice_range = range(tomo_height-1, -1, -1)
         
     for slice_indx in slice_range:
-        tentative_cor, recon = opt.scan_cor(fine_range,
-                                            fine_step,
-                                            tentative_cor,
-                                            tomo[:, slice_indx, None, :],
-                                            theta,
-                                            options)
+        tentative_cor, recon = opt.fine_scan_cor(fine_range,
+                                                 fine_step,
+                                                 tentative_cor,
+                                                 tomo[:, slice_indx, None, :],
+                                                 theta,
+                                                 options)
      
-        cor.append(tentative_cor)
+        cor[tomo_indx] = tentative_cor
         
         # Save individual slices
-        save_path = (recon_folder
-                     + prefix
-                     + '_'            
-                     + '{:0>4d}'.format(tomo_indx)
-                     + '.tif')
+        recon_name = (prefix
+                      + '{:0>4d}'.format(tomo_indx)
+                      + '.tif')
+        save_path = recon_folder / recon_name
         tifffile.imsave(save_path, recon)
+        
+        if progress_bar:
+            if (global_indx >= part_prog*height/max_prog):
+                sys.stdout.write('*'); sys.stdout.flush();  
+                part_prog += 1
+            if (global_indx >= height-1):
+                sys.stdout.write('|     done  \n'); sys.stdout.flush(); 
+        
+        global_indx += 1
         
         if ascending:
             tomo_indx += 1
@@ -137,6 +159,9 @@ while processing:
             if tomo_start < 0:
                 tomo_start = 0
                 height_exception = True
+
+plt.figure()
+plt.plot(cor)
 
 # Complete processing
 eta_s = int(opt.toc())
