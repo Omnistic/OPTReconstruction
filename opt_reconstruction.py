@@ -1,3 +1,4 @@
+# Modules
 import os
 import sys
 import tifffile
@@ -6,11 +7,12 @@ import opt_functions as opt
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-# Initialization
+# Data paths
 proj_folder = Path(r'D:\OPTReconstructionData\M3_523_17wNIF_ASMA_Projections')
 recon_folder = Path(r'C:\Users\david\Desktop\M3_523_17wNIF_ASMA_Reconstruction')
 prefix = 'recon_'
 
+# Initializations
 proj_names = os.listdir(proj_folder)
 proj_path = proj_folder / proj_names[0]
 proj = tifffile.imread(str(proj_path))
@@ -160,6 +162,7 @@ while processing:
                 tomo_start = 0
                 height_exception = True
 
+# Plot the list of centers of rotation used
 plt.figure()
 plt.plot(cor)
 
