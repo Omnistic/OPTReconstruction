@@ -23,7 +23,7 @@ theta = np.linspace(0, 2 * np.pi, angles)
 
 cor = np.zeros(height)
 tentative_cor = width // 2
-coarse_range = 15
+coarse_range = 30
 coarse_range = range(-coarse_range, coarse_range+1)
 coarse_step = 1
 init_fine_range = 7

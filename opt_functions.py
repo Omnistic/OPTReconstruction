@@ -55,7 +55,7 @@ def coarse_scan_cor(scan_range, step, guess, tomo, theta, options):
     plt.show()
 
     if num_cors == 1:
-        cor = cors[0]
+        cor = cor_array[0]
     else:
         for cor_indx in cors:
             recon = tomopy.recon(tomo,
